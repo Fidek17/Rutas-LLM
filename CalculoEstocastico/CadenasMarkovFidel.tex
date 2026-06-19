@@ -1,0 +1,664 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage[spanish]{babel}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{enumitem}
+\usepackage{geometry}
+\geometry{a4paper, margin=1in}
+
+\theoremstyle{definition}
+\newtheorem{ejercicio}{Ejercicio}
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\Var}{\operatorname{Var}}
+\newcommand{\A}{\mathbf{A}}
+\newcommand{\I}{\mathbf{I}}
+\newcommand{\PP}{\mathbf{P}}
+\newcommand{\ind}{\mathbf{1}}
+
+\title{Cadenas de Markov en Tiempo Continuo\\\large{Solución de Ejercicios}}
+\author{Díaz Valdez Fidel Gileberto}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section*{Ejercicio 1: Proceso de Poisson}
+
+\textbf{Enunciado:} El número de llamadas por hora que llegan a un servicio de atención sigue un proceso de Poisson con $\lambda = 4$.
+
+\subsection*{Solución}
+
+\textbf{a) Probabilidad de que lleguen menos de dos llamadas en la primera hora:}
+
+Sea $X_t \sim \text{Poisson}(\lambda t)$. Para $t=1$, $\lambda t = 4$.
+
+\[
+\Prob\{X_1 < 2\} = \Prob\{X_1 = 0\} + \Prob\{X_1 = 1\} = e^{-4} + 4e^{-4} = 5e^{-4} \approx 0.0916
+\]
+
+\textbf{b) Probabilidad de que lleguen al menos dos llamadas en la segunda hora, dado que llegaron seis en la primera:}
+
+Por la propiedad de incrementos independientes del proceso de Poisson:
+
+\[
+\Prob\{X_2 - X_1 \geq 2 \mid X_1 = 6\} = \Prob\{X_1 \geq 2\} = 1 - \Prob\{X_1 \leq 1\}
+\]
+
+\[
+= 1 - (e^{-4} + 4e^{-4}) = 1 - 5e^{-4} \approx 0.9084
+\]
+
+\textbf{c) Tiempo esperado hasta que lleguen quince llamadas:}
+
+Sea $T_{15}$ el tiempo de la decimoquinta llegada. En un proceso de Poisson, el tiempo entre llegadas $T_i \sim \text{Exp}(\lambda)$ son independientes. Por tanto:
+
+\[
+\E[T_{15}] = \sum_{i=1}^{15} \E[T_i] = \frac{15}{\lambda} = \frac{15}{4} = 3.75 \text{ horas}
+\]
+
+\textbf{d) Probabilidad de que exactamente 5 de 8 llamadas lleguen en la primera hora, dado que llegaron 8 en dos horas:}
+
+Usamos la propiedad de que, condicionado a $X_{t+s} = n$, $X_t \sim \text{Binomial}(n, t/(t+s))$:
+
+\[
+\Prob\{X_1 = 5 \mid X_2 = 8\} = \binom{8}{5} \left(\frac{1}{2}\right)^5 \left(\frac{1}{2}\right)^3 = \binom{8}{5} \left(\frac{1}{2}\right)^8
+\]
+
+\[
+= \frac{56}{256} = \frac{7}{32} \approx 0.21875
+\]
+
+\textbf{e) Probabilidad de que exactamente $j$ de $k$ llamadas lleguen en la primera hora, dado que llegaron $k$ en cuatro horas:}
+
+\[
+\Prob\{X_1 = j \mid X_4 = k\} = \binom{k}{j} \left(\frac{1}{4}\right)^j \left(\frac{3}{4}\right)^{k-j}, \quad j = 0,1,\dots,k
+\]
+
+---
+
+\section*{Ejercicio 2: Procesos de Poisson Independientes}
+
+\textbf{Enunciado:} $X_t$ y $Y_t$ son procesos de Poisson independientes con parámetros $\lambda_1$ y $\lambda_2$.
+
+\subsection*{Solución}
+
+\textbf{a) Probabilidad de que llegue un cliente a la tienda 1 antes que a la tienda 2:}
+
+Sean $T_1$ y $T_2$ los tiempos de la primera llegada a cada tienda. $T_i \sim \text{Exp}(\lambda_i)$.
+
+\[
+\Prob\{T_1 < T_2\} = \frac{\lambda_1}{\lambda_1 + \lambda_2}
+\]
+
+\textbf{b) Probabilidad de que en la primera hora llegue un total de exactamente cuatro clientes:}
+
+Como $Z_t = X_t + Y_t$ es Poisson con parámetro $\lambda_1 + \lambda_2$:
+
+\[
+\Prob\{Z_1 = 4\} = e^{-(\lambda_1+\lambda_2)} \frac{(\lambda_1+\lambda_2)^4}{4!}
+\]
+
+\textbf{c) Dado que exactamente cuatro clientes han llegado, probabilidad de que todos hayan ido a la tienda 1:}
+
+\[
+\Prob\{X_1 = 4 \mid Z_1 = 4\} = \left(\frac{\lambda_1}{\lambda_1+\lambda_2}\right)^4
+\]
+
+\textbf{d) Distribución de $X_T$, donde $T$ es el tiempo de la primera llegada a la tienda 2:}
+
+Para $k \geq 0$:
+
+\[
+\Prob\{X_T = k\} = \int_0^\infty \Prob\{X_t = k\} \lambda_2 e^{-\lambda_2 t} dt
+\]
+
+\[
+= \int_0^\infty e^{-\lambda_1 t} \frac{(\lambda_1 t)^k}{k!} \lambda_2 e^{-\lambda_2 t} dt = \frac{\lambda_2 \lambda_1^k}{k!} \int_0^\infty t^k e^{-(\lambda_1+\lambda_2)t} dt
+\]
+
+\[
+= \frac{\lambda_2 \lambda_1^k}{k!} \cdot \frac{k!}{(\lambda_1+\lambda_2)^{k+1}} = \frac{\lambda_2 \lambda_1^k}{(\lambda_1+\lambda_2)^{k+1}}
+\]
+
+Por tanto, $X_T$ tiene distribución geométrica:
+
+\[
+\Prob\{X_T = k\} = \frac{\lambda_2}{\lambda_1+\lambda_2} \left(\frac{\lambda_1}{\lambda_1+\lambda_2}\right)^k, \quad k \geq 0
+\]
+
+---
+
+\section*{Ejercicio 3: Suma de Procesos de Poisson}
+
+\textbf{Enunciado:} $X_t$ y $Y_t$ son procesos de Poisson independientes con parámetros $\lambda_1$ y $\lambda_2$. $Z_t = X_t + Y_t$.
+
+\subsection*{Solución}
+
+\textbf{a) Demostrar que $Z_t$ es un proceso de Poisson:}
+
+Para $t > s$:
+
+\[
+Z_t - Z_s = (X_t - X_s) + (Y_t - Y_s)
+\]
+
+Por independencia, $Z_t - Z_s$ es suma de dos Poisson independientes con parámetros $\lambda_1(t-s)$ y $\lambda_2(t-s)$, que es Poisson con parámetro $(\lambda_1+\lambda_2)(t-s)$. Además, los incrementos son independientes. Por tanto, $Z_t$ es un proceso de Poisson con parámetro $\lambda_1+\lambda_2$.
+
+\textbf{b) Probabilidad de que la primera llamada llegue al primer teléfono:}
+
+\[
+\Prob\{\text{primera llamada al teléfono 1}\} = \frac{\lambda_1}{\lambda_1+\lambda_2}
+\]
+
+\textbf{c) Función de densidad y distribución de $T$, el primer momento en que ha llegado al menos una llamada de cada teléfono:}
+
+Sea $T_1$ la primera llegada al teléfono 1 y $T_2$ la primera llegada al teléfono 2. Entonces $T = \max(T_1, T_2)$.
+
+\[
+F_T(t) = \Prob\{T \leq t\} = \Prob\{T_1 \leq t, T_2 \leq t\} = (1 - e^{-\lambda_1 t})(1 - e^{-\lambda_2 t})
+\]
+
+La función de densidad es:
+
+\[
+f_T(t) = \frac{d}{dt}F_T(t) = \lambda_1 e^{-\lambda_1 t}(1 - e^{-\lambda_2 t}) + \lambda_2 e^{-\lambda_2 t}(1 - e^{-\lambda_1 t})
+\]
+
+\[
+= \lambda_1 e^{-\lambda_1 t} + \lambda_2 e^{-\lambda_2 t} - (\lambda_1+\lambda_2)e^{-(\lambda_1+\lambda_2)t}
+\]
+
+---
+
+\section*{Ejercicio 4: Propiedades del Generador Infinitesimal}
+
+\textbf{Enunciado:} Sea $\A$ el generador infinitesimal de una cadena de Markov irreducible en tiempo continuo con espacio de estados finito.
+
+\subsection*{Solución}
+
+\textbf{a) Demostrar que $P = \frac{1}{a}\A + \I$ es la matriz de transición de una cadena en tiempo discreto irreducible y aperiódica:}
+
+Para $a > \max_x \alpha(x)$:
+
+- Filas suman 1: $\sum_y P(x,y) = \frac{1}{a}\sum_y \A(x,y) + \sum_y \delta_{xy} = 1$
+
+- Entradas no negativas: $P(x,y) = \frac{1}{a}\alpha(x,y) \geq 0$ para $x \neq y$, y $P(x,x) = 1 - \frac{\alpha(x)}{a} \geq 0$
+
+- Irreducible: $\alpha(x,y) > 0 \Rightarrow P(x,y) > 0$
+
+- Aperiódica: $P(x,x) > 0$ para todo $x$
+
+\textbf{b) Conclusión sobre los eigenvalores de $\A$:}
+
+Por la teoría de cadenas en tiempo discreto, $P$ tiene un único eigenvector izquierdo con eigenvalor 1 que es un vector de probabilidad. Esto implica que $\A$ tiene un único eigenvector izquierdo con eigenvalor 0 (el mismo vector).
+
+Si $\mu$ es un eigenvalor de $P$, entonces $\lambda = a(\mu - 1)$ es eigenvalor de $\A$. Para $\mu \neq 1$, como $P$ es aperiódica, $|\mu| < 1$, por lo que $\operatorname{Re}(\lambda) = a(\operatorname{Re}(\mu) - 1) < 0$. Por tanto, todos los demás eigenvalores de $\A$ tienen parte real estrictamente negativa.
+
+---
+
+\section*{Ejercicio 5: Cadena de Markov de dos estados}
+
+\textbf{Enunciado:} Espacio de estados $\{1,2\}$, $\alpha(1,2) = 1$, $\alpha(2,1) = 4$.
+
+\subsection*{Solución}
+
+El generador infinitesimal es:
+
+\[
+\A = \begin{pmatrix} -1 & 1 \\ 4 & -4 \end{pmatrix}
+\]
+
+Diagonalizamos: $\lambda_1 = 0$, $\lambda_2 = -5$.
+
+Eigenvector para $\lambda = 0$: $(1,1)^T$.  
+Eigenvector para $\lambda = -5$: $(1,-4)^T$.
+
+\[
+Q = \begin{pmatrix} 1 & 1 \\ 1 & -4 \end{pmatrix}, \quad Q^{-1} = \frac{1}{-5} \begin{pmatrix} -4 & -1 \\ -1 & 1 \end{pmatrix} = \frac{1}{5} \begin{pmatrix} 4 & 1 \\ 1 & -1 \end{pmatrix}
+\]
+
+\[
+e^{t\A} = Q \begin{pmatrix} 1 & 0 \\ 0 & e^{-5t} \end{pmatrix} Q^{-1}
+\]
+
+\[
+= \frac{1}{5} \begin{pmatrix} 4 + e^{-5t} & 1 - e^{-5t} \\ 4 - 4e^{-5t} & 1 + 4e^{-5t} \end{pmatrix}
+\]
+
+\[
+\PP_t = \begin{pmatrix} \frac{4}{5} & \frac{1}{5} \\ \frac{4}{5} & \frac{1}{5} \end{pmatrix} + e^{-5t} \begin{pmatrix} \frac{1}{5} & -\frac{1}{5} \\ -\frac{4}{5} & \frac{4}{5} \end{pmatrix}
+\]
+
+---
+
+\section*{Ejercicio 6: Cadena de Markov de tres estados}
+
+\textbf{Enunciado:} $\alpha(1,2) = 1$, $\alpha(2,1) = 4$, $\alpha(2,3) = 1$, $\alpha(3,2) = 4$, $\alpha(1,3) = 0$, $\alpha(3,1) = 0$.
+
+\subsection*{Solución}
+
+El generador infinitesimal es:
+
+\[
+\A = \begin{pmatrix}
+    -1 & 1 & 0 \\
+    4 & -5 & 1 \\
+    0 & 4 & -4
+\end{pmatrix}
+\]
+
+Distribución estacionaria $\pi$ satisface $\pi\A = 0$:
+
+\[
+\begin{cases}
+    -\pi_1 + 4\pi_2 = 0 \\
+    \pi_1 - 5\pi_2 + 4\pi_3 = 0 \\
+    \pi_2 - 4\pi_3 = 0 \\
+    \pi_1 + \pi_2 + \pi_3 = 1
+\end{cases}
+\]
+
+De la primera ecuación: $\pi_1 = 4\pi_2$.  
+De la tercera: $\pi_3 = \frac{1}{4}\pi_2$.
+
+Normalizando: $4\pi_2 + \pi_2 + \frac{1}{4}\pi_2 = \frac{21}{4}\pi_2 = 1 \Rightarrow \pi_2 = \frac{4}{21}$.
+
+\[
+\pi = \left(\frac{16}{21}, \frac{4}{21}, \frac{1}{21}\right)
+\]
+
+Para $e^{t\A}$, los eigenvalores son $\lambda_1 = 0$, $\lambda_2 = -2$, $\lambda_3 = -8$ (esto se verifica resolviendo el polinomio característico).
+
+Por tanto:
+
+\[
+\PP_t = \ind\pi + e^{-2t} \cdot \text{(proyección sobre eigenvector de -2)} + e^{-8t} \cdot \text{(proyección sobre eigenvector de -8)}
+\]
+
+---
+
+\section*{Ejercicio 7: Positividad de las probabilidades de transición}
+
+\textbf{Enunciado:} Demostrar que para cada $i, j$ y todo $t > 0$, $\Prob\{X_t = j \mid X_0 = i\} > 0$.
+
+\subsection*{Solución}
+
+Por irreducibilidad, existe un camino $i = x_0, x_1, \ldots, x_n = j$ con $\alpha(x_k, x_{k+1}) > 0$ para todo $k$.
+
+Para $t > 0$, elegimos tiempos $0 < t_1 < t_2 < \cdots < t_n < t$ con $t_{k+1} - t_k > 0$ y $t - t_n > 0$. La probabilidad de seguir este camino con saltos exactamente en esos tiempos es:
+
+\[
+e^{-\alpha(x_0)t_1} \cdot \alpha(x_0,x_1) \cdot e^{-\alpha(x_1)(t_2-t_1)} \cdot \alpha(x_1,x_2) \cdots e^{-\alpha(x_{n-1})(t_n-t_{n-1})} \cdot e^{-\alpha(x_n)(t-t_n)} > 0
+\]
+
+Integrando sobre todas las posibles secuencias de tiempos de salto, obtenemos $p_t(i,j) > 0$.
+
+---
+
+\section*{Ejercicio 8: Cadena de Markov de cuatro estados simétrica}
+
+\textbf{Enunciado:} 
+\[
+\A = \begin{pmatrix}
+    -3 & 1 & 1 & 1 \\
+    2 & -4 & 1 & 1 \\
+    2 & 1 & -4 & 1 \\
+    1 & 1 & 1 & -3
+\end{pmatrix}
+\]
+
+\subsection*{Solución}
+
+\textbf{a) Distribución de equilibrio:}
+
+Por simetría, $\pi_1 = \pi_2$. Sea $\pi_1 = \pi_2 = a$, $\pi_0 = b$, $\pi_3 = c$.
+
+Resolviendo el sistema $\pi\A = 0$ con $\sum \pi_i = 1$:
+
+\[
+\pi = \left(\frac{7}{20}, \frac{1}{5}, \frac{1}{5}, \frac{1}{4}\right) = \left(\frac{7}{20}, \frac{4}{20}, \frac{4}{20}, \frac{5}{20}\right)
+\]
+
+\textbf{b) Tiempo esperado hasta el primer cambio de estado comenzando en el estado 1:}
+
+\[
+\E[T \mid X_0 = 1] = \frac{1}{\alpha(1)} = \frac{1}{3}
+\]
+
+\textbf{c) Tiempo esperado hasta llegar al estado 4 comenzando en el estado 1:}
+
+Eliminamos el estado 4 (z = 4). La matriz $\tilde{\A}$ es:
+
+\[
+\tilde{\A} = \begin{pmatrix}
+    -3 & 1 & 1 \\
+    2 & -4 & 1 \\
+    2 & 1 & -4
+\end{pmatrix}
+\]
+
+Resolvemos $-\tilde{\A}\bar{b} = \bar{1}$:
+
+\[
+\begin{cases}
+    3b_1 - b_2 - b_3 = 1 \\
+    -2b_1 + 4b_2 - b_3 = 1 \\
+    -2b_1 - b_2 + 4b_3 = 1
+\end{cases}
+\]
+
+Resolviendo: $b_1 = 1$, $b_2 = 1$, $b_3 = 1$.
+
+Por tanto, $\E[T_{1\to4}] = 1$.
+
+---
+
+\section*{Ejercicio 9: Cadena de Markov no simétrica}
+
+\textbf{Enunciado:} 
+\[
+\A = \begin{pmatrix}
+    -3 & 2 & 1 & 0 \\
+    1 & -4 & 2 & 1 \\
+    0 & 2 & -4 & 2 \\
+    0 & 0 & 1 & -1
+\end{pmatrix}
+\]
+
+\subsection*{Solución}
+
+\textbf{a) Distribución de equilibrio:}
+
+Resolvemos $\pi\A = 0$:
+
+\[
+\begin{cases}
+    -3\pi_1 + \pi_2 = 0 \\
+    2\pi_1 - 4\pi_2 + 2\pi_3 = 0 \\
+    \pi_1 + 2\pi_2 - 4\pi_3 + \pi_4 = 0 \\
+    \pi_2 + 2\pi_3 - \pi_4 = 0 \\
+    \pi_1 + \pi_2 + \pi_3 + \pi_4 = 1
+\end{cases}
+\]
+
+De la primera: $\pi_2 = 3\pi_1$.  
+De la cuarta: $\pi_4 = \pi_2 + 2\pi_3 = 3\pi_1 + 2\pi_3$.
+
+De la segunda: $2\pi_1 - 4(3\pi_1) + 2\pi_3 = 0 \Rightarrow 2\pi_1 - 12\pi_1 + 2\pi_3 = 0 \Rightarrow -10\pi_1 + 2\pi_3 = 0 \Rightarrow \pi_3 = 5\pi_1$.
+
+Entonces: $\pi_2 = 3\pi_1$, $\pi_3 = 5\pi_1$, $\pi_4 = 3\pi_1 + 10\pi_1 = 13\pi_1$.
+
+Normalizando: $\pi_1 + 3\pi_1 + 5\pi_1 + 13\pi_1 = 22\pi_1 = 1 \Rightarrow \pi_1 = \frac{1}{22}$.
+
+\[
+\pi = \left(\frac{1}{22}, \frac{3}{22}, \frac{5}{22}, \frac{13}{22}\right)
+\]
+
+\textbf{b) Tiempo esperado hasta el primer cambio de estado comenzando en el estado 1:}
+
+\[
+\E[T \mid X_0 = 1] = \frac{1}{\alpha(1)} = \frac{1}{3}
+\]
+
+\textbf{c) Tiempo esperado hasta llegar al estado 4 comenzando en el estado 1:}
+
+Eliminamos el estado 4. $\tilde{\A}$ es:
+
+\[
+\tilde{\A} = \begin{pmatrix}
+    -3 & 2 & 1 \\
+    1 & -4 & 2 \\
+    0 & 2 & -4
+\end{pmatrix}
+\]
+
+Resolvemos $-\tilde{\A}\bar{b} = \bar{1}$:
+
+\[
+\begin{cases}
+    3b_1 - 2b_2 - b_3 = 1 \\
+    -b_1 + 4b_2 - 2b_3 = 1 \\
+    -2b_2 + 4b_3 = 1
+\end{cases}
+\]
+
+De la tercera: $b_3 = \frac{1+2b_2}{4}$.  
+Sustituyendo en la segunda: $-b_1 + 4b_2 - 2\frac{1+2b_2}{4} = 1 \Rightarrow -b_1 + 4b_2 - \frac{1+2b_2}{2} = 1 \Rightarrow -b_1 + 4b_2 - \frac{1}{2} - b_2 = 1 \Rightarrow -b_1 + 3b_2 = \frac{3}{2}$.
+
+De la primera: $3b_1 - 2b_2 - \frac{1+2b_2}{4} = 1 \Rightarrow 3b_1 - 2b_2 - \frac{1}{4} - \frac{b_2}{2} = 1 \Rightarrow 3b_1 - \frac{5}{2}b_2 = \frac{5}{4}$.
+
+Resolviendo el sistema:
+\[
+\begin{cases}
+    -b_1 + 3b_2 = \frac{3}{2} \\
+    3b_1 - \frac{5}{2}b_2 = \frac{5}{4}
+\end{cases}
+\]
+
+De la primera: $b_1 = 3b_2 - \frac{3}{2}$.  
+Sustituyendo: $3(3b_2 - \frac{3}{2}) - \frac{5}{2}b_2 = \frac{5}{4} \Rightarrow 9b_2 - \frac{9}{2} - \frac{5}{2}b_2 = \frac{5}{4} \Rightarrow \frac{13}{2}b_2 = \frac{23}{4} \Rightarrow b_2 = \frac{23}{26}$.
+
+Entonces $b_1 = 3\cdot\frac{23}{26} - \frac{3}{2} = \frac{69}{26} - \frac{39}{26} = \frac{30}{26} = \frac{15}{13}$, y $b_3 = \frac{1+2\cdot\frac{23}{26}}{4} = \frac{1+\frac{23}{13}}{4} = \frac{\frac{36}{13}}{4} = \frac{9}{13}$.
+
+Por tanto, $\E[T_{1\to4}] = b_1 = \frac{15}{13} \approx 1.1538$.
+
+---
+
+\section*{Ejercicio 10: Probabilidad invariante para la cadena embebida}
+
+\textbf{Enunciado:} $p(x,y) = \alpha(x,y)/\alpha(x)$ para $x \neq y$. Encontrar la probabilidad invariante para la cadena en tiempo discreto.
+
+\subsection*{Solución}
+
+La cadena en tiempo discreto tiene probabilidades de transición $p(x,y)$ para $x \neq y$, y $p(x,x) = 0$ (cuando hay un salto, la cadena se mueve a un estado diferente).
+
+Si $\pi$ es la medida invariante de la cadena en tiempo continuo, entonces la medida invariante $\mu$ de la cadena embebida satisface:
+
+\[
+\mu(x) = \frac{\pi(x)\alpha(x)}{\sum_z \pi(z)\alpha(z)}
+\]
+
+Esto se verifica porque la cadena en tiempo continuo pasa una fracción $\pi(x)$ del tiempo en el estado $x$, y sale de $x$ a tasa $\alpha(x)$. La cadena embebida visita $x$ con probabilidad proporcional a $\pi(x)\alpha(x)$.
+
+---
+
+\section*{Ejercicio 11: Clasificación de procesos de nacimiento y muerte}
+
+\textbf{Enunciado:} $\lambda_n = 1 + \frac{1}{n+1}$, $\mu_n = 1$.
+
+\subsection*{Solución}
+
+\textbf{Caso 1: $\lambda_n = 1 + \frac{1}{n+1}$}
+
+Para el criterio de transiencia:
+\[
+\sum_{n=1}^\infty \frac{\mu_1 \cdots \mu_n}{\lambda_1 \cdots \lambda_n} = \sum_{n=1}^\infty \frac{1}{\prod_{k=1}^n \left(1 + \frac{1}{k+1}\right)}
+\]
+
+Notemos que $\prod_{k=1}^n \left(1 + \frac{1}{k+1}\right) = \prod_{k=1}^n \frac{k+2}{k+1} = \frac{3}{2} \cdot \frac{4}{3} \cdots \frac{n+2}{n+1} = \frac{n+2}{2}$.
+
+Por tanto, el término general es $\frac{2}{n+2}$, y la serie $\sum_{n=1}^\infty \frac{2}{n+2}$ diverge. Por tanto, la cadena es recurrente.
+
+Para la recurrencia positiva:
+\[
+\sum_{n=0}^\infty \frac{\lambda_0 \cdots \lambda_{n-1}}{\mu_1 \cdots \mu_n} = \sum_{n=0}^\infty \frac{\prod_{k=0}^{n-1} \left(1 + \frac{1}{k+1}\right)}{1}
+\]
+
+Para $n=0$, el producto vacío es 1. Para $n \geq 1$, $\prod_{k=0}^{n-1} \left(1 + \frac{1}{k+1}\right) = \prod_{k=0}^{n-1} \frac{k+2}{k+1} = \frac{2}{1} \cdot \frac{3}{2} \cdots \frac{n+1}{n} = n+1$.
+
+Por tanto, la serie es $\sum_{n=0}^\infty (n+1)$, que diverge. Así que la cadena es **nulamente recurrente**.
+
+\textbf{Caso 2: $\lambda_n = 1 - \frac{1}{n+2}$}
+
+Para la recurrencia positiva:
+\[
+\prod_{k=0}^{n-1} \lambda_k = \prod_{k=0}^{n-1} \left(1 - \frac{1}{k+2}\right) = \prod_{k=0}^{n-1} \frac{k+1}{k+2} = \frac{1}{n+1}
+\]
+
+Entonces:
+\[
+\sum_{n=0}^\infty \frac{\lambda_0 \cdots \lambda_{n-1}}{\mu_1 \cdots \mu_n} = \sum_{n=0}^\infty \frac{1}{n+1} = \infty
+\]
+
+La serie diverge, así que no es positivamente recurrente.
+
+Para la transiencia:
+\[
+\sum_{n=1}^\infty \frac{1}{\lambda_1 \cdots \lambda_n} = \sum_{n=1}^\infty (n+1) = \infty
+\]
+
+La serie diverge, así que la cadena es **recurrente**. Como no es positivamente recurrente, es **nulamente recurrente**.
+
+---
+
+\section*{Ejercicio 12: Modelo de población lineal}
+
+\textbf{Enunciado:} $\lambda_n = n\lambda$, $\mu_n = n\mu$. ¿Para qué valores es segura la extinción?
+
+\subsection*{Solución}
+
+Sea $a(n)$ la probabilidad de que, comenzando con $n$ individuos, la población se extinga eventualmente. Tenemos $a(0)=1$, y para $n \geq 1$:
+
+\[
+a(n) = \frac{n\mu}{n(\lambda+\mu)} a(n-1) + \frac{n\lambda}{n(\lambda+\mu)} a(n+1)
+\]
+
+Simplificando:
+\[
+a(n) = \frac{\mu}{\lambda+\mu} a(n-1) + \frac{\lambda}{\lambda+\mu} a(n+1)
+\]
+
+Esto es equivalente a la ecuación para un proceso de nacimiento-muerte. La solución con $a(0)=1$ es:
+
+\[
+a(n) = \begin{cases}
+    1 & \text{si } \lambda \leq \mu \\
+    \left(\frac{\mu}{\lambda}\right)^n & \text{si } \lambda > \mu
+\end{cases}
+\]
+
+Por tanto, la extinción es segura (probabilidad 1) si y solo si $\lambda \leq \mu$.
+
+---
+
+\section*{Ejercicio 13: Modelo de población con inmigración}
+
+\textbf{Enunciado:} $\lambda_n = n\lambda + \nu$, $\mu_n = n\mu$.
+
+\subsection*{Solución}
+
+La serie para la recurrencia positiva es:
+\[
+\sum_{n=0}^\infty \frac{\lambda_0 \cdots \lambda_{n-1}}{\mu_1 \cdots \mu_n} = \sum_{n=0}^\infty \frac{\nu \cdot (\lambda + \nu) \cdots ((n-1)\lambda + \nu)}{n! \mu^n}
+\]
+
+Por el criterio de la razón:
+\[
+\frac{a_{n+1}}{a_n} = \frac{n\lambda + \nu}{(n+1)\mu} \to \frac{\lambda}{\mu}
+\]
+
+Si $\lambda < \mu$, la serie converge $\Rightarrow$ positivamente recurrente.  
+Si $\lambda > \mu$, la serie diverge $\Rightarrow$ transitoria.  
+Si $\lambda = \mu$, la serie diverge (como $1/n$) $\Rightarrow$ nulamente recurrente.
+
+---
+
+\section*{Ejercicio 14: Proceso con $\lambda_n = 1/(n+1)$ y $\mu_n = 1$}
+
+\textbf{Enunciado:} Demostrar que el proceso es positivamente recurrente y encontrar la distribución estacionaria.
+
+\subsection*{Solución}
+
+Para la recurrencia positiva:
+\[
+\sum_{n=0}^\infty \frac{\lambda_0 \cdots \lambda_{n-1}}{\mu_1 \cdots \mu_n} = \sum_{n=0}^\infty \frac{1}{1 \cdot 2 \cdots n} = \sum_{n=0}^\infty \frac{1}{n!} = e < \infty
+\]
+
+Por tanto, el proceso es positivamente recurrente.
+
+La distribución estacionaria es:
+\[
+\pi(n) = \frac{1}{n!} \cdot \frac{1}{e} = \frac{e^{-1}}{n!}, \quad n \geq 0
+\]
+
+Es decir, $\pi$ es una distribución de Poisson con parámetro 1.
+
+---
+
+\section*{Ejercicio 15: Modelo determinista de crecimiento cuadrático}
+
+\textbf{Enunciado:} $\frac{dp}{dt} = c[p(t)]^2$, $p(0) = 1$.
+
+\subsection*{Solución}
+
+Por separación de variables:
+\[
+\frac{dp}{p^2} = c\,dt \Rightarrow -\frac{1}{p} = ct + C
+\]
+
+Con $p(0) = 1$: $-\frac{1}{1} = C \Rightarrow C = -1$.
+
+Por tanto:
+\[
+-\frac{1}{p} = ct - 1 \Rightarrow \frac{1}{p} = 1 - ct \Rightarrow p(t) = \frac{1}{1 - ct}
+\]
+
+Cuando $t \to \frac{1}{c}^-$, $p(t) \to \infty$. Es decir, la población explota en tiempo finito $t = 1/c$. Esto corresponde al fenómeno de "explosión" en el proceso estocástico con $\lambda_n = n^2\lambda$, $\mu_n = 0$.
+
+---
+
+\section*{Ejercicio 16: Ecuaciones backward para procesos de nacimiento y muerte}
+
+\textbf{Enunciado:} Encontrar las ecuaciones backward para las probabilidades de transición $p_t(m,n)$.
+
+\subsection*{Solución}
+
+Las ecuaciones backward para un proceso de nacimiento y muerte son:
+
+Para $m \neq n$:
+
+\[
+\frac{\partial}{\partial t} p_t(m,n) = -\lambda_m p_t(m,n) + \mu_m p_t(m-1,n) + \lambda_m p_t(m+1,n)
+\]
+
+con los convenios adecuados: $p_t(-1,n) = 0$ y, para $m=0$, $\mu_0 = 0$.
+
+En forma general, para $m \geq 0$:
+
+\[
+\frac{\partial}{\partial t} p_t(m,n) = \lambda_m p_t(m+1,n) + \mu_m p_t(m-1,n) - (\lambda_m + \mu_m)p_t(m,n)
+\]
+
+donde definimos $\mu_0 = 0$ y $p_t(-1,n) = 0$.
+
+Estas ecuaciones se obtienen condicionando en el primer salto desde el estado $m$:
+
+\[
+p_{t+\Delta t}(m,n) = (1 - (\lambda_m+\mu_m)\Delta t)p_t(m,n) + \lambda_m \Delta t p_t(m+1,n) + \mu_m \Delta t p_t(m-1,n) + o(\Delta t)
+\]
+
+Reordenando y tomando el límite $\Delta t \to 0$ se obtiene la ecuación.
+
+---
+
+\section*{Resumen de Fórmulas Clave}
+
+\begin{itemize}
+    \item \textbf{Proceso de Poisson:} $\Prob\{X_t = k\} = e^{-\lambda t} \frac{(\lambda t)^k}{k!}$
+    \item \textbf{Suma de Poisson:} $X_t + Y_t \sim \text{Poisson}((\lambda_1+\lambda_2)t)$
+    \item \textbf{Distribución condicional:} $\Prob\{X_s = k \mid X_{s+t} = n\} = \binom{n}{k} \left(\frac{s}{s+t}\right)^k \left(\frac{t}{s+t}\right)^{n-k}$
+    \item \textbf{Probabilidad de primer evento:} $\Prob\{T_1 < T_2\} = \frac{\lambda_1}{\lambda_1+\lambda_2}$
+    \item \textbf{Generador infinitesimal:} $\A(x,x) = -\alpha(x)$, $\A(x,y) = \alpha(x,y)$
+    \item \textbf{Distribución estacionaria:} $\pi\A = 0$, $\sum_x \pi(x) = 1$
+    \item \textbf{Ecuaciones forward:} $\frac{d}{dt}\PP_t = \PP_t\A$
+    \item \textbf{Ecuaciones backward:} $\frac{d}{dt}\PP_t = \A\PP_t$
+    \item \textbf{Tiempo medio de paso:} $-\tilde{\A}\bar{b} = \bar{1}$
+    \item \textbf{Criterio de transiencia:} $\sum_{n=1}^\infty \frac{\mu_1\cdots\mu_n}{\lambda_1\cdots\lambda_n} < \infty$
+    \item \textbf{Criterio de recurrencia positiva:} $\sum_{n=0}^\infty \frac{\lambda_0\cdots\lambda_{n-1}}{\mu_1\cdots\mu_n} < \infty$
+\end{itemize}
+
+\end{document}
