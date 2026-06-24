@@ -1,0 +1,681 @@
+\documentclass[aspectratio=169]{beamer}
+
+% -------------------------------------------------------
+%  Paquetes
+% -------------------------------------------------------
+\usepackage[spanish]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amssymb, amsthm}
+\usepackage{mathtools}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, backgrounds}
+\usetikzlibrary{arrows.meta, positioning, shapes.geometric, fit, backgrounds, decorations.pathreplacing}
+\usepackage{booktabs}
+\usepackage{xcolor}
+
+
+% -------------------------------------------------------
+%  Tema y colores
+% -------------------------------------------------------
+\usetheme{Madrid}
+\usecolortheme{seahorse}
+
+\definecolor{azuloscuro}{RGB}{0,51,102}
+\definecolor{azulmedio}{RGB}{0,102,179}
+\definecolor{grisclaro}{RGB}{240,240,245}
+\definecolor{rojoacento}{RGB}{180,30,30}
+\definecolor{verdeacento}{RGB}{0,120,60}
+\definecolor{act1}{RGB}{0,70,140}
+\definecolor{act2}{RGB}{0,120,60}
+\definecolor{puente}{RGB}{150,80,0}
+\definecolor{act3}{RGB}{140,0,50}
+
+\setbeamercolor{frametitle}{bg=azuloscuro, fg=white}
+\setbeamercolor{title}{fg=white}
+\setbeamercolor{author}{fg=white}
+\setbeamercolor{institute}{fg=white}
+\setbeamercolor{date}{fg=white}
+\setbeamercolor{titlelike}{bg=azuloscuro}
+\setbeamercolor{block title}{bg=azulmedio, fg=white}
+\setbeamercolor{block body}{bg=grisclaro}
+\setbeamercolor{alerted text}{fg=rojoacento}
+
+% Bloques de colores para cada acto
+\newenvironment{act1block}[1]{%
+  \setbeamercolor{block title}{bg=act1, fg=white}%
+  \setbeamercolor{block body}{bg=act1!10}%
+  \begin{block}{#1}}{\end{block}}
+
+\newenvironment{act2block}[1]{%
+  \setbeamercolor{block title}{bg=act2, fg=white}%
+  \setbeamercolor{block body}{bg=act2!10}%
+  \begin{block}{#1}}{\end{block}}
+
+\newenvironment{puenteblock}[1]{%
+  \setbeamercolor{block title}{bg=puente, fg=white}%
+  \setbeamercolor{block body}{bg=puente!10}%
+  \begin{block}{#1}}{\end{block}}
+
+\newenvironment{act3block}[1]{%
+  \setbeamercolor{block title}{bg=act3, fg=white}%
+  \setbeamercolor{block body}{bg=act3!10}%
+  \begin{block}{#1}}{\end{block}}
+
+% -------------------------------------------------------
+%  Comandos matemáticos
+% -------------------------------------------------------
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\Exp}{\mathbb{E}}
+\newcommand{\Geom}{\mathrm{Geom}}
+\newcommand{\Expo}{\mathrm{Exp}}
+\newcommand{\dconv}{\xrightarrow{d}}
+
+% -------------------------------------------------------
+%  Metadatos
+% -------------------------------------------------------
+\title[Tiempo de Primer Encuentro]{%
+  Teoremas Límite para el Tiempo de\\
+  Primer Encuentro del Óptimo Global}
+\subtitle{Del modelo de Markov a la ley exponencial}
+\author[]{Basado en Rudolph (1998) y Oliveto \& Witt (2015)}
+\institute[]{Algoritmos Evolutivos --- Teoría}
+\date{}
+
+% -------------------------------------------------------
+\begin{document}
+% -------------------------------------------------------
+
+% ==================== PORTADA ==========================
+\begin{frame}
+  \titlepage
+\end{frame}
+
+% ==================== ÍNDICE ===========================
+\begin{frame}{Estructura de la exposición}
+  \begin{center}
+  \begin{tikzpicture}[
+      box/.style={rectangle, rounded corners=3pt,
+                  draw, fill=white, text width=2.4cm,
+                  align=center, font=\scriptsize\bfseries,
+                  inner sep=4pt, minimum height=1.0cm},
+      arr/.style={-Stealth, thick, shorten >=2pt, shorten <=2pt},
+    ]
+    \node[box, draw=act1, fill=act1!15] (a1)
+      {\textcolor{act1}{Acto 1}\\[2pt] El EA como\\Cadena de Markov};
+
+    \node[box, draw=act2, fill=act2!15, right=0.7cm of a1] (a2)
+      {\textcolor{act2}{Acto 2}\\[2pt] $\Prob\{T<\infty\}=1$\\bajo A$_1$--A$_3$};
+
+    \node[box, draw=puente, fill=puente!15, right=0.7cm of a2] (pb)
+      {\textcolor{puente}{Puente}\\[2pt] Cola geométrica\\de $T$};
+
+    \node[box, draw=act3, fill=act3!15, right=0.7cm of pb] (a3)
+      {\textcolor{act3}{Acto 3}\\[2pt] Mutación rara\\$\to$ Ley Exp$(1)$};
+
+    \draw[arr, color=act1] (a1) -- (a2);
+    \draw[arr, color=act2] (a2) -- (pb);
+    \draw[arr, color=puente] (pb) -- (a3);
+  \end{tikzpicture}
+  \end{center}
+
+  \bigskip
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+    \begin{block}{Referencias base}
+      \begin{itemize}
+        \item Rudolph (1998): marco general para EAs con
+              espacio finito y tiempo discreto.
+        \item Oliveto \& Witt (2015): análisis riguroso
+              del SGA en OneMax.
+      \end{itemize}
+    \end{block}
+
+    \column{0.48\textwidth}
+    \begin{block}{Pregunta central}
+      Dado un EA sobre un espacio finito,\\
+      ¿cuál es la \textbf{distribución} del tiempo
+      de espera hasta encontrar el óptimo?
+    \end{block}
+  \end{columns}
+\end{frame}
+
+% =======================================================
+%  ACTO 1
+% =======================================================
+\section{Acto 1 — El EA como Cadena de Markov}
+
+\begin{frame}{Acto 1 \textcolor{act1}{\rule[0.5ex]{6cm}{1.5pt}}}
+  \begin{center}
+    \Large\textcolor{act1}{\textbf{¿Cómo modelamos el problema?}}\\[8pt]
+    \normalsize El algoritmo evolutivo como cadena de Markov finita
+  \end{center}
+\end{frame}
+
+\begin{frame}{El EA como proceso estocástico}
+  Un algoritmo evolutivo transforma la población en cada generación
+  mediante operadores probabilísticos:
+
+  \bigskip
+  \begin{center}
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      op/.style={rectangle, rounded corners=2pt,
+                 draw=act1, fill=act1!10,
+                 font=\tiny, inner sep=4pt, align=center,
+                 minimum width=1.6cm},
+      arr/.style={-Stealth, thick, color=act1, shorten >=1pt, shorten <=1pt}
+    ]
+    \node[op] (p)  {Población\\$X_k$};
+    \node[op, right=0.6cm of p] (m)  {Selección\\padres};
+    \node[op, right=0.6cm of m] (r)  {Recom-\\binación};
+    \node[op, right=0.6cm of r] (mu) {Mutación};
+    \node[op, right=0.6cm of mu] (s) {Selección\\hijos};
+    \node[op, right=0.6cm of s] (p2) {Población\\$X_{k+1}$};
+
+    \draw[arr] (p)  -- (m);
+    \draw[arr] (m)  -- (r);
+    \draw[arr] (r)  -- (mu);
+    \draw[arr] (mu) -- (s);
+    \draw[arr] (s)  -- (p2);
+  \end{tikzpicture}
+  \end{center}
+
+  \bigskip
+  \begin{act1block}{Observación clave (Rudolph, 1998)}
+    $X_{k+1}$ depende \textbf{únicamente} de $X_k$, no de
+    $X_0, X_1, \ldots, X_{k-1}$. Esto es la
+    \textbf{propiedad de Markov}.
+  \end{act1block}
+\end{frame}
+
+\begin{frame}{Cadena de Markov finita}
+  \begin{act1block}{Modelo formal}
+    \[
+      \Prob(X_{k+1} \in A \mid X_0, X_1, \ldots, X_k)
+      \;=\;
+      \Prob(X_{k+1} \in A \mid X_k).
+    \]
+  \end{act1block}
+
+  \bigskip
+  Como el espacio de búsqueda $\mathcal{X}$ es \textbf{finito}, el
+  espacio de estados de la cadena también lo es. Esto nos permite:
+
+  \bigskip
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+    \textbf{Lo que ganamos con este modelo:}
+    \begin{itemize}
+      \item Usar toda la maquinaria de cadenas de Markov finitas.
+      \item Definir rigurosamente el tiempo de primer encuentro.
+      \item Estudiar la distribución del tiempo de espera.
+    \end{itemize}
+
+    \column{0.48\textwidth}
+    \begin{act1block}{Tiempo de primer encuentro}
+      \[
+        T = \min\{k \geq 0 : F_k = f^*\}
+      \]
+      donde $F_k = \max\{f(X_k^{(i)})\}$ es el mejor
+      fitness en la generación $k$.\\[4pt]
+      $T$ es un \textbf{tiempo de paro} bien definido.
+    \end{act1block}
+  \end{columns}
+\end{frame}
+
+% =======================================================
+%  ACTO 2
+% =======================================================
+\section{Acto 2 — Llegada al óptimo con probabilidad 1}
+
+\begin{frame}{Acto 2 \textcolor{act2}{\rule[0.5ex]{6cm}{1.5pt}}}
+  \begin{center}
+    \Large\textcolor{act2}{\textbf{¿Qué garantizamos?}}\\[8pt]
+    \normalsize Bajo qué suposiciones el EA encuentra el óptimo con $\Prob = 1$
+  \end{center}
+\end{frame}
+
+\begin{frame}{Suposiciones sobre los operadores}
+  Para garantizar la llegada al óptimo necesitamos condiciones mínimas
+  sobre cada operador. Rudolph (1998) formula tres:
+
+  \bigskip
+  \begin{columns}[T]
+    \column{0.32\textwidth}
+    \begin{act2block}{(A$_1$) Recombinación}
+      Todo padre puede pasar la recombinación \textbf{sin alterarse}
+      con probabilidad mínima:
+      \[\delta_r > 0\]
+    \end{act2block}
+
+    \column{0.32\textwidth}
+    \begin{act2block}{(A$_2$) Mutación}
+      Todo individuo puede alcanzar \textbf{cualquier otro} mediante
+      mutaciones sucesivas con probabilidad mínima por paso:
+      \[\delta_m > 0\]
+    \end{act2block}
+
+    \column{0.32\textwidth}
+    \begin{act2block}{(A$_3$) Selección}
+      Todo individuo puede \textbf{sobrevivir} la selección con
+      probabilidad mínima:
+      \[\delta_s > 0\]
+    \end{act2block}
+  \end{columns}
+
+  \bigskip
+  \begin{itemize}
+    \item Ninguna suposición puede ser eliminada: si alguna
+          $\delta_r, \delta_m$ o $\delta_s$ es \textbf{cero},
+          el resultado falla.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{¿Por qué cada suposición es necesaria?}
+  \begin{center}
+  \begin{tabular}{clll}
+    \toprule
+    \textbf{Si faltara\ldots} & \textbf{Consecuencia} \\
+    \midrule
+    (A$_1$): $\delta_r = 0$ &
+      La recombinación destruye siempre al individuo; nunca avanza. \\[4pt]
+    (A$_2$): $\delta_m = 0$ &
+      El óptimo puede ser inalcanzable desde algún estado inicial. \\[4pt]
+    (A$_3$): $\delta_s = 0$ &
+      Un hijo que llegó al óptimo siempre es eliminado por selección. \\
+    \bottomrule
+  \end{tabular}
+  \end{center}
+
+  \bigskip
+  \begin{act2block}{Intuición}
+    Las tres suposiciones juntas garantizan que el espacio de búsqueda
+    está \textbf{completamente conectado} a través de los operadores,
+    y que ningún operador destruye determinísticamente el progreso.
+  \end{act2block}
+\end{frame}
+
+\begin{frame}{La prueba del Teorema 2.1 (Rudolph, 1998)}
+  La prueba construye el argumento en tres niveles:
+
+  \medskip
+  \begin{enumerate}
+    \item<1-> \textbf{Existe un camino hacia el óptimo.}\\
+          Por (A$_2$), para cualquier $x \notin \mathcal{X}^*$ existe
+          una secuencia finita de mutaciones:
+          \[x = x_0 \to x_1 \to \cdots \to x_{k^*} \in \mathcal{X}^*\]
+          Como $\mathcal{X}$ es finito, $k^* = \max_x\{k_x\}$ es finito.
+
+    \bigskip
+    \item<2-> \textbf{La probabilidad de recorrer ese camino es positiva.}\\
+          En cada paso: recombinación no altera ($\geq \delta_r$),
+          mutación avanza ($\geq \delta_m$), selección deja sobrevivir
+          ($\geq \delta_s$). En $k^*$ pasos:
+          \[\delta = (\delta_r \cdot \delta_m \cdot \delta_s)^{k^*-1}
+            \cdot \delta_r \cdot \delta_m > 0\]
+
+    \bigskip
+    \item<3-> \textbf{Con suficientes intentos, el éxito es inevitable.}\\
+          En cada bloque de $k^*$ iteraciones, $\Prob(\text{éxito}) \geq \delta > 0$,
+          independientemente del estado actual (propiedad de Markov).
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Teorema 2.1 (Rudolph, 1998)}
+  \begin{theorem}[Rudolph, 1998]
+    Si se cumplen \emph{(A$_1$)}, \emph{(A$_2$)} y \emph{(A$_3$)},
+    entonces:
+    \[
+      \Prob\{T < \infty\} = 1
+    \]
+    independientemente de la inicialización. Además, la probabilidad
+    de \textbf{no} haber encontrado el óptimo después de $k$
+    iteraciones satisface:
+    \[
+      \Prob\{T > k\}
+      \;\leq\;
+      (1-\delta)^{\lfloor k/k^* \rfloor}
+      \;\xrightarrow{k\to\infty}\; 0.
+    \]
+  \end{theorem}
+
+  \bigskip
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+    \textbf{Lo que ya sabemos:}
+    \begin{itemize}
+      \item El óptimo se encuentra en tiempo finito, siempre.
+      \item La probabilidad de no haberlo encontrado cae a cero.
+    \end{itemize}
+
+    \column{0.48\textwidth}
+    \textbf{Lo que aún no sabemos:}
+    \begin{itemize}
+      \item ¿Qué \textit{forma} tiene la distribución de $T$?
+      \item ¿Cómo se comporta cuando $\delta_m \to 0$?
+    \end{itemize}
+  \end{columns}
+\end{frame}
+
+% =======================================================
+%  PUENTE
+% =======================================================
+\section{Puente — Cola geométrica de T}
+
+\begin{frame}{Puente \textcolor{puente}{\rule[0.5ex]{6cm}{1.5pt}}}
+  \begin{center}
+    \Large\textcolor{puente}{\textbf{La cola geométrica de $T$}}\\[8pt]
+    \normalsize Llegar al infinito
+  \end{center}
+\end{frame}
+
+\begin{frame}{La estructura de bloques}
+  La prueba del Teorema 2.1 divide el tiempo en
+  \textbf{bloques de $k^*$ iteraciones}:
+
+  \bigskip
+  \begin{center}
+  \begin{tikzpicture}[
+      bloque/.style={rectangle, draw=puente, fill=puente!10,
+                     minimum width=2.2cm, minimum height=0.9cm,
+                     font=\small, align=center},
+      arr/.style={-Stealth, thick, color=puente}
+    ]
+    \node[bloque] (b1) {Bloque 1\\$k^*$ iter.};
+    \node[bloque, right=0.3cm of b1] (b2) {Bloque 2\\$k^*$ iter.};
+    \node[right=0.3cm of b2, font=\large] (dots) {$\cdots$};
+    \node[bloque, right=0.3cm of dots] (bj) {Bloque $j$\\$k^*$ iter.};
+    \node[right=0.3cm of bj, font=\large] (dots2) {$\cdots$};
+
+    \draw[arr] (b1) -- (b2);
+    \draw[arr] (b2) -- (dots);
+    \draw[arr] (dots) -- (bj);
+    \draw[arr] (bj) -- (dots2);
+
+    \node[below=0.5cm of b1, font=\small, color=rojoacento]
+      {$\Prob(\text{éxito})\geq\delta$};
+    \node[below=0.5cm of b2, font=\small, color=rojoacento]
+      {$\Prob(\text{éxito})\geq\delta$};
+    \node[below=0.5cm of bj, font=\small, color=rojoacento]
+      {$\Prob(\text{éxito})\geq\delta$};
+  \end{tikzpicture}
+  \end{center}
+
+  \bigskip
+  \begin{puenteblock}{Independencia entre bloques}
+    Por la propiedad de Markov, la probabilidad de éxito $\delta$ en
+    cada bloque es \textbf{la misma e independiente} del resultado de
+    bloques anteriores, sin importar cuán cerca o lejos del óptimo
+    se esté.
+  \end{puenteblock}
+\end{frame}
+
+\begin{frame}{¿Por qué esto es una distribución geométrica?}
+  Cada bloque es equivalente a \textbf{lanzar una moneda} con
+  probabilidad de éxito $\delta$:
+
+  \bigskip
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+    \textbf{Lanzamiento de moneda:}
+    \begin{itemize}
+      \item Éxito (prob. $\delta$): encontrar el óptimo en este bloque.
+      \item Fracaso (prob. $1-\delta$): no encontrarlo, pasar al siguiente.
+    \end{itemize}
+
+    \bigskip
+    Define $B = \lfloor T/k^* \rfloor$ como el número de bloques
+    hasta el primer éxito. Entonces:
+    \[
+      \Prob\{B = j\} = (1-\delta)^{j-1} \cdot \delta
+    \]
+    que es una \textbf{distribución geométrica}.
+
+    \column{0.48\textwidth}
+    \begin{puenteblock}{$T$ hereda la estructura}
+      Como $T \approx k^* \cdot B$:
+      \[
+        \Prob\{T > k\} \leq (1-\delta)^{\lfloor k/k^* \rfloor}
+      \]
+      \[
+        \Exp[T] \approx \frac{k^*}{\delta}
+      \]
+      La cola de $T$ cae \textbf{exponencialmente} en $k$:
+      \[
+        (1-\delta)^k \approx e^{-\delta k}
+      \]
+    \end{puenteblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{¿Qué significa $\lfloor k/k^* \rfloor$?}
+  Es el número de \textbf{bloques completos} que caben en $k$
+  iteraciones. Las iteraciones sobrantes se ignoran porque no
+  garantizan completar el camino al óptimo.
+
+  \bigskip
+  \textbf{Ejemplo con $k^* = 3$:}
+
+  \begin{center}
+  \begin{tikzpicture}[
+      iter/.style={rectangle, draw=gray, fill=gray!10,
+                   minimum width=0.7cm, minimum height=0.6cm,
+                   font=\scriptsize},
+      brace/.style={decorate,
+                    decoration={brace, amplitude=5pt, mirror}}
+    ]
+    \foreach \i in {1,...,9} {
+      \node[iter] at ({(\i-1)*0.85cm}, 0) {\i};
+    }
+    \node[iter, fill=orange!20, draw=orange] at ({6*0.85cm}, 0) {7};
+    \node[iter, fill=gray!5, draw=gray!40] at ({7*0.85cm}, 0) {8};
+    \node[iter, fill=gray!5, draw=gray!40] at ({8*0.85cm}, 0) {9};
+
+    \draw[brace, color=act2]
+      (-0.35cm, -0.45cm) -- (2.2cm, -0.45cm)
+      node[midway, below=5pt, font=\scriptsize, color=act2]
+      {Bloque 1};
+    \draw[brace, color=act2]
+      (2.2cm, -0.45cm) -- (4.75cm, -0.45cm)
+      node[midway, below=5pt, font=\scriptsize, color=act2]
+      {Bloque 2};
+    \draw[brace, color=puente]
+      (4.75cm, -0.45cm) -- (5.5cm, -0.45cm)
+      node[midway, below=5pt, font=\scriptsize, color=puente]
+      {sobrante};
+  \end{tikzpicture}
+  \end{center}
+
+  \bigskip
+  Para $k=7$ y $k^*=3$: $\lfloor 7/3 \rfloor = 2$ bloques completos.
+  La iteración 7 cae en el tercer bloque incompleto y se ignora
+  en la cota. Por eso:
+  \[
+    \Prob\{T > 7\} \leq (1-\delta)^2,
+    \quad\text{no}\quad (1-\delta)^7.
+  \]
+\end{frame}
+
+% =======================================================
+%  ACTO 3
+% =======================================================
+\section{Acto 3 — Mutación rara y ley exponencial}
+
+\begin{frame}{Acto 3 \textcolor{act3}{\rule[0.5ex]{6cm}{1.5pt}}}
+  \begin{center}
+    \Large\textcolor{act3}{\textbf{¿Qué pasa cuando la mutación es rara?}}\\[8pt]
+    \normalsize De la distribución geométrica a la ley exponencial
+  \end{center}
+\end{frame}
+
+\begin{frame}{¿Qué significa mutación rara?}
+  \begin{columns}[T]
+    \column{0.48\textwidth}
+    \textbf{Definición intuitiva}\\[6pt]
+    La mutación es \emph{rara} cuando la probabilidad de que un bit
+    específico cambie en una iteración es \textbf{muy pequeña}: el
+    individuo pasa casi sin cambios a la siguiente generación.
+
+    \bigskip
+    \textbf{En Rudolph:}
+    \[\delta_m > 0, \quad \delta_m \approx 0.\]
+
+    \textbf{En Oliveto \& Witt (Standard Bit Mutation):}
+    \[p = \frac{1}{n} \;\xrightarrow{n\to\infty}\; 0.\]
+
+    \column{0.48\textwidth}
+    \begin{act3block}{¿Por qué $p=1/n$ es ``rara''?}
+      Número esperado de bits que cambian:
+      \[
+        \Exp[\text{bits mutados}] = n \cdot \frac{1}{n} = 1.
+      \]
+      Para $n$ grande, \textbf{solo 1 bit de $n$} cambia en promedio
+      por iteración.
+    \end{act3block}
+
+    \vspace{0.3cm}
+    \begin{alertblock}{Consecuencia sobre $\delta$}
+      \small
+      $\delta_m \to 0 \;\Rightarrow\; \delta \to 0 \;\Rightarrow\;
+      \Exp[T] = k^*/\delta \to \infty$
+    \end{alertblock}
+  \end{columns}
+\end{frame}
+
+\begin{frame}{De la geométrica a la exponencial}
+  Cuando $\delta \to 0$, la distribución geométrica de $T$
+  converge a una ley exponencial. Esto es un resultado clásico
+  de probabilidad:
+
+  \bigskip
+  \begin{act3block}{Resultado clásico}
+    Si $T \sim \Geom(\delta)$ con $\delta \to 0$, entonces:
+    \[
+      \delta \cdot T \;\dconv\; \Expo(1).
+    \]
+    Es decir, el tiempo reescalado por su media $\Exp[T]=1/\delta$
+    converge en distribución a una exponencial estándar.
+  \end{act3block}
+
+  \bigskip
+  \textbf{Demostración:}
+  \[
+    \Prob\{\delta \cdot T > x\}
+    = \Prob\!\left\{T > \frac{x}{\delta}\right\}
+    \leq (1-\delta)^{x/\delta}
+    = \left[(1-\delta)^{1/\delta}\right]^x
+    \;\xrightarrow{\delta\to 0}\; e^{-x}.
+  \]
+  Esto es la función de supervivencia de $\Expo(1)$.
+\end{frame}
+
+
+
+% =======================================================
+%  SÍNTESIS
+% =======================================================
+\section{Síntesis}
+
+\begin{frame}{La cadena lógica completa}
+  \begin{center}
+  \begin{tikzpicture}[
+      node distance=0.5cm,
+      box/.style={rectangle, rounded corners=4pt,
+                  text width=10cm, align=center,
+                  font=\small, inner sep=5pt,
+                  minimum height=0.75cm},
+      arr/.style={-Stealth, thick},
+    ]
+    \node[box, draw=act1, fill=act1!10] (m)
+      {Propiedad de Markov $\;\Rightarrow\;$
+       $T$ bien definido como tiempo de paro};
+
+    \node[box, draw=act2, fill=act2!10, below=of m] (t)
+      {Teorema 2.1 (Rudolph) $\;\Rightarrow\;$
+       $\Prob\{T<\infty\}=1$ bajo (A$_1$), (A$_2$), (A$_3$)};
+
+    \node[box, draw=puente, fill=puente!10, below=of t] (g)
+      {Cola geométrica $\;\Rightarrow\;$
+       $\Prob\{T>k\} \leq (1-\delta)^{\lfloor k/k^*\rfloor}$};
+
+    \node[box, draw=act3, fill=act3!10, below=of g] (r)
+      {Mutación rara $(\delta_m\to 0)$ $\;\Rightarrow\;$
+       $\delta\to 0,\quad \mathbb{E}[T]\to\infty$};
+
+    \node[box, draw=act3, fill=act3!15, below=of r] (e)
+      {$\Geom(\delta)$ con $\delta\to 0$
+       $\;\Rightarrow\;$
+       $\dfrac{T}{\mathbb{E}[T]} \xrightarrow{d} \mathrm{Exp}(1)$};
+
+
+
+    \draw[arr, color=act1]   (m)  -- (t);
+    \draw[arr, color=act2]   (t)  -- (g);
+    \draw[arr, color=puente] (g)  -- (r);
+    \draw[arr, color=act3]   (r)  -- (e);
+
+  \end{tikzpicture}
+  \end{center}
+\end{frame}
+
+\begin{frame}{Conclusiones}
+  \begin{enumerate}
+    \item \textcolor{act1}{\textbf{Acto 1.}}
+          La propiedad de Markov permite modelar cualquier EA con
+          espacio finito como una cadena de Markov, haciendo que
+          $T$ sea un tiempo de paro bien definido.
+
+    \bigskip
+    \item \textcolor{act2}{\textbf{Acto 2.}}
+          Bajo las condiciones mínimas (A$_1$)--(A$_3$), el
+          Teorema 2.1 de Rudolph garantiza $\Prob\{T<\infty\}=1$
+          para cualquier inicialización.
+
+    \bigskip
+    \item \textcolor{puente}{\textbf{Puente.}}
+          La prueba produce además una cota geométrica sobre la cola
+          de $T$, que es el eslabón formal hacia la ley exponencial.
+
+    \bigskip
+    \item \textcolor{act3}{\textbf{Acto 3.}}
+          Bajo mutación rara ($\delta_m \to 0$), el parámetro
+          $\delta \to 0$ y el tiempo de primer encuentro reescalado
+          converge en distribución a una \alert{ley exponencial}:
+          \[
+            \frac{T}{\mathbb{E}[T]}
+            \;\xrightarrow{d}\;
+            \mathrm{Exp}(1).
+          \]
+  \end{enumerate}
+\end{frame}
+
+\begin{frame}{Referencias}
+  \begin{thebibliography}{9}
+    \bibitem{rudolph1998}
+      G.~Rudolph.
+      \newblock Finite Markov Chain Results in Evolutionary Computation:
+        A Tour d'Horizon.
+      \newblock \emph{Fundamenta Informaticae}, in press, 1998.
+
+    \bibitem{oliveto2015}
+      P.\,S.~Oliveto, C.~Witt.
+      \newblock Improved Time Complexity Analysis of the Simple Genetic
+        Algorithm.
+      \newblock \emph{Theoretical Computer Science}, 605:21--41, 2015.
+
+    \bibitem{feller1971}
+      W.~Feller.
+      \newblock \emph{An Introduction to Probability Theory and Its
+        Applications}, vol.~2.
+      \newblock Wiley, 1971.
+  \end{thebibliography}
+\end{frame}
+
+\begin{frame}{}
+  \begin{center}
+    {\Large \textbf{Gracias}}\\[12pt]
+    \large Por favor no hagan preguntas ;) 
+  \end{center}
+\end{frame}
+
+\end{document}
